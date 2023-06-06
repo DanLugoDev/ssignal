@@ -1,6 +1,6 @@
 {
   "name": "sane-signal",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "main": "index.ts",
   "repository": "git@github.com:DanLugoDev/sane-signal.git",
   "author": "Daniel Lugo <gh@danlugo.dev>",
