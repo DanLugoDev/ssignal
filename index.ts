@@ -2,9 +2,9 @@ type Unsubscriber = () => void
 
 const identity = <T>(val: T): T => val
 
-export type Subber<T = null> = (val: T | null) => void
+export type Subber<T> = (val: T) => void
 
-export interface Signal<T = null> {
+export interface Signal<T> {
   readonly current: T
   readonly set: (newVal: T) => void
   readonly sub: (subber: Subber<T>) => Unsubscriber
