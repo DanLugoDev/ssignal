@@ -6,7 +6,7 @@ export type Subber<T> = (val: T) => void
 
 export interface Signal<T> {
   readonly current: T
-  readonly set: (newVal: T) => void
+  readonly emit: (newVal: T) => void
   readonly sub: (subber: Subber<T>) => Unsubscriber
 }
 
@@ -81,7 +81,7 @@ export const createSignal = <T = null>(
         }
       }
     },
-    set: (newVal) => {
+    emit: (newVal) => {
       current = onFire(newVal, deps)
 
       notify()
