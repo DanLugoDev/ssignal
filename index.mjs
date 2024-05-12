@@ -1,5 +1,3 @@
-import WebSocket from 'isomorphic-ws'
-
 /* eslint-disable @typescript-eslint/no-magic-numbers */
 /**
  * @type {readonly any[]}
