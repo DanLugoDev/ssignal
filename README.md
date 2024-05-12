@@ -1,6 +1,6 @@
 # ssignal
 
-Short for sane-signal or simple-signal. For more complex examples refer to the test file. Install the pre-release ESLint vscode extension for it to correctly work.
+Short for sane-signal or simple-signal.
 
 ```ts
 import * as ss from 'ssignal'
