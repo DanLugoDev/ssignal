@@ -17,73 +17,108 @@ someSignal.emit(1) // console will log "1"
 # Examples
 
 ```js
+/**
+ * @typedef {object} User
+ * @prop {string} latestMsg
+ * @prop {string} name
+ */
+
+/**
+ * @typedef {Readonly<Record<string,User>>} Users
+ */
+
+/**
+ * @type {Users}
+ */
+const initUsersData = {
+  john: {
+    latestMsg: 'Hello',
+    name: 'John'
+  }
+}
+
+/**
+ * @typedef {object} UserMsg
+ * @prop {string} id
+ * @prop {string} text
+ */
+
+/**
+ * @type {UserMsg}
+ */
+const userMsgInit = {
+  id: 'amy',
+  text: 'hyd'
+}
+
 // Equivalent to a boolean property on some random slice.
 const isAuth = createSignal(false, [])
 // These types of signals are akin to action creators in redux.
 const reqUsersData = createSignal()
-const resUsersData = createSignal(
-  // Example initial value
-  {
-    john: {
-      name: 'John',
-      latestMsg: 'Hello'
-    }
-  }
-)
-const resUserMsg = createSignal(
-  // Example initial value
-  {
-    id: 'amy',
-    txt: 'hyd'
-  }
-)
+const resUsersData = createSignal(initUsersData)
+const resUserMsg = createSignal(userMsgInit)
 
 // Here's one way to set up a an external reactive data source.
-let ws = new WebSocket('wss://www.example.com')
+const wss = new WebSocket('wss://www.example.com')
 
 isAuth.sub(() => {
-  if (isAuth.getCurr()) {
-    ws.onmessage = function onWsMsg({ data, type }) {
-      if (type === 'resUsersData') resUsersData.emit(data)
+  if (isAuth.getCurr())
+    wss.onmessage = function onWsMsg({ data, type }) {
+      if (type === 'resUsersData')
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        resUsersData.emit(data)
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       if (type === 'resUserMsg') resUserMsg.emit(data)
     }
-  }
 })
 
-reqUsersData.sub(() => ws.send('reqUsersData'))
+reqUsersData.sub(() => void wss.send('reqUsersData'))
+
+/**
+ * @type {Users}
+ */
+const usersInitData = {
+  amy: {
+    latestMsg: 'Hey',
+    name: 'amy'
+  }
+}
 
 // A signal that holds a table of users
 const users = createSignal(
-  {
-    [Math.random().toString()]: {
-      name: 'amy',
-      latestMsg: 'Hey'
-    }
-  },
+  usersInitData,
   [resUserMsg, resUsersData],
+  /**
+   * @returns {Users}
+   */
   (currUsers, trigDep) => {
     if (trigDep === resUserMsg) {
-      const { id, txt } = resUserMsg.getCurr()
+      const { id, text } = resUserMsg.getCurr()
 
       return {
         ...currUsers,
         [id]: {
-          ...currUsers[id],
-          latestMsg: txt
+          ...(currUsers[id] ?? { name: id }),
+          latestMsg: text
         }
       }
     }
     if (trigDep === resUsersData) {
-      const users = resUsersData.getCurr()
+      const usersData = resUsersData.getCurr()
 
       return {
         ...currUsers,
-        ...users
+        ...usersData
       }
     }
-    // No mandatory return needed
+    // Please typescript
+    return currUsers
   }
 )
+
+users.sub(() => {
+  console.log(users.getCurr())
+})
 
 // Here's another way to set up a an external reactive data source. Here ssignal
 // handles the sub/pub. A signal that contains a mutable value, similar to
@@ -124,18 +159,19 @@ const socketSignal = createSignal(
        * @return {SocketSignalShape|void}
        */
       ws.onmessage = function onWsMsg({ data, type }) {
-        if (type === 'resUsersData') {
+        if (type === 'resUsersData')
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
           resUsersData.emit(data)
-        }
-        if (type === 'resUserMsg') {
-          resUserMsg.emit(data)
-        }
+
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        if (type === 'resUserMsg') resUserMsg.emit(data)
 
         // This setTimeout ensures this runs after the return statement below.
         // Some libraries that accept event handlers can and will call the event
         // handler with an initial value without an event having actually
         // occurred as part of their API.
         setTimeout(() => {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           socketSignal.emit({ lastMsg: { data, type }, ws })
           // ^^^^ With this socketSignal.getCurrent() will always provide the
           // latest event received of any type to its subbers.
@@ -147,88 +183,113 @@ const socketSignal = createSignal(
         ws
       }
     }
+
+    return curr
   }
 )
 
 // Another version of the users signal, but with a take() approach.
 const usersB = createSignal(
-  {
-    [Math.random().toString()]: {
-      name: 'amy',
-      latestMsg: 'Hey'
-    }
-  },
+  usersInitData,
   [socketSignal],
+  /** @return {Users} */
   (currUsers) => {
+    // No need to look at trigSignal because there's only one dep
     const {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       lastMsg: { data, type }
     } = socketSignal.getCurr()
 
     if (type === 'resUserMsg') {
-      const { id, txt } = data
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const { id, text } = /** @type {UserMsg} */ (data)
 
       return {
         ...currUsers,
         [id]: {
-          ...currUsers[id],
-          latestMsg: txt
+          ...(currUsers[id] ?? { name: id }),
+          latestMsg: text
         }
       }
     }
     if (type === 'resUsersData') {
-      const users = socketSignal.getCurr()
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const usersData = /** @type {Users} */ (data)
 
       return {
         ...currUsers,
-        ...users
+        ...usersData
       }
     }
+    // please typescript
+    return currUsers
   }
 )
 
+usersB.sub(() => {
+  console.log(usersB.getCurr())
+})
+
 // Use case for take approach:
 
+// Equivalent to an action creator with payload.
 const onKeyPressSignal = createSignal('up', [])
 
+// Equivalent to an action creator with payload.
+const onPieceClickedSignal = createSignal(uuid())
+
 const api = {
-  /**
-   * @param {(key: string) => void} cb
-   */
-  subToKeyPress(cb) {
-    setInterval(() => cb('up'), 100)
-  },
   /**
    * @param {string} html
    */
   render(html) {
     console.log(html)
+  },
+  /**
+   * @param {(key: string) => void} cb
+   */
+  subToKeyPress(cb) {
+    setInterval(() => void cb('up'), 100)
   }
 }
 
-api.subToKeyPress((key) => onKeyPressSignal.emit(key))
+api.subToKeyPress((key) => void onKeyPressSignal.emit(key))
 
 const chessPiece = createSignal(
   {
+    id: uuid(),
     x: 0,
     y: 0
   },
-  [onKeyPressSignal],
+  [onKeyPressSignal, onPieceClickedSignal],
   (curr, trigDep) => {
     if (trigDep === onKeyPressSignal) {
-      const { x, y } = curr
+      const { id, x, y } = curr
       const key = onKeyPressSignal.getCurr()
 
-      if (key === 'up') return { x, y: y + 1 }
-      if (key === 'down') return { x, y: y - 1 }
-      if (key === 'left') return { x: x - 1, y }
-      if (key === 'right') return { x: x + 1, y }
+      if (key === 'up') return { id, x, y: y + 1 }
+      if (key === 'down') return { id, x, y: y - 1 }
+      if (key === 'left') return { id, x: x - 1, y }
+      if (key === 'right') return { id, x: x + 1, y }
     }
+
+    // please typescript
+    return curr
   }
 )
 
 chessPiece.sub(() => {
-  const { x, y } = chessPiece.getCurr()
+  const { id } = chessPiece.getCurr()
 
-  api.render('...')
+  api.render(`
+    ...
+      <div
+        class="piece"
+        id=${id}
+        onclick="onPieceClickedSignal(e.target.id)"
+      />
+    ...
+    ...
+  `)
 })
 ```
