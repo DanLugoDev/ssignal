@@ -52,6 +52,7 @@ export default [
       'no-undefined': 'off',
       'no-underscore-dangle': 'off',
       'no-void': 'off',
+      'no-warning-comments': 'off',
       'one-var': 'off',
       'sort-imports': 'off'
     }
