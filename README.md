@@ -65,10 +65,10 @@ isAuth.sub(() => {
   if (isAuth.getCurr())
     wss.onmessage = function onWsMsg({ data, type }) {
       if (type === 'resUsersData')
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        resUsersData.emit(data)
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      if (type === 'resUserMsg') resUserMsg.emit(data)
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-base-to-string
+        resUsersData.emit(JSON.parse(data.toString()))
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-base-to-string
+      if (type === 'resUserMsg') resUserMsg.emit(JSON.parse(data.toString()))
     }
 })
 
@@ -116,9 +116,7 @@ const users = createSignal(
   }
 )
 
-users.sub(() => {
-  console.log(users.getCurr())
-})
+users.sub(() => void console.log(users.getCurr()))
 
 // Here's another way to set up a an external reactive data source. Here ssignal
 // handles the sub/pub. A signal that contains a mutable value, similar to
@@ -226,9 +224,7 @@ const usersB = createSignal(
   }
 )
 
-usersB.sub(() => {
-  console.log(usersB.getCurr())
-})
+usersB.sub(() => void console.log(usersB.getCurr()))
 
 // Use case for take approach:
 
@@ -236,7 +232,7 @@ usersB.sub(() => {
 const onKeyPressSignal = createSignal('up', [])
 
 // Equivalent to an action creator with payload.
-const onPieceClickedSignal = createSignal(uuid())
+const onPieceClickedSignal = createSignal(Math.random().toString())
 
 const api = {
   /**
@@ -249,7 +245,7 @@ const api = {
    * @param {(key: string) => void} cb
    */
   subToKeyPress(cb) {
-    setInterval(() => void cb('up'), 100)
+    setInterval(() => void cb('up'), 1000)
   }
 }
 
@@ -257,7 +253,7 @@ api.subToKeyPress((key) => void onKeyPressSignal.emit(key))
 
 const chessPiece = createSignal(
   {
-    id: uuid(),
+    id: Math.random().toString(),
     x: 0,
     y: 0
   },

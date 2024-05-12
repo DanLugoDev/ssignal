@@ -4,9 +4,11 @@
     "@eslint/js": "^8.57.0",
     "@types/eslint__js": "^8.42.3",
     "@types/node": "^20.12.11",
+    "@types/ws": "^8.5.10",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "globals": "^15.2.0",
+    "isomorphic-ws": "^5.0.0",
     "typescript": "^5.4.5",
     "typescript-eslint": "^7.8.0"
   },

@@ -1,3 +1,6 @@
+import WebSocket from 'isomorphic-ws'
+
+/* eslint-disable @typescript-eslint/no-magic-numbers */
 /**
  * @type {readonly any[]}
  */
@@ -9,8 +12,10 @@ const minusOne = -1
 
 /**
  * @template T
- * @typedef {(curr: T, trigDep?: Signal<any>) => T|null|undefined|void} Transducer Called with
- * the signal dep that emitted unless it was a manual emit of this signal.
+ * @template {readonly Signal<any>[]} Deps
+ * @typedef {(curr: T, trigDep: Deps[number]|Signal<T>) => T|void} Transducer
+ * Called with the signal dep that emitted unless it was a manual emit of this
+ * signal.
  */
 
 /**
@@ -26,7 +31,7 @@ const minusOne = -1
  * @template {readonly Signal<any>[]} Deps
  * @param {T=} initialData
  * @param {(readonly [...Deps])=} deps
- * @param {Transducer<T>=} transducer
+ * @param {Transducer<T,Deps>=} transducer
  * @return {Signal<T>}
  */
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -36,6 +41,9 @@ export function createSignal(initialData, deps, transducer) {
 
   if (arguments.length === zero)
     currData = /** @type {T} */ ('$$__SSIGNAL__EMPTY')
+
+  const isEventSignal = currData === '$$__SSIGNAL__EMPTY'
+  const isDataSignal = !isEventSignal
 
   /**
    * @type {readonly (() => void)[]}
@@ -77,8 +85,6 @@ export function createSignal(initialData, deps, transducer) {
   return {
     // eslint-disable-next-line @typescript-eslint/prefer-readonly-parameter-types
     emit(...args) {
-      const isEventSignal = currData === '$$__SSIGNAL__EMPTY'
-      const isDataSignal = !isEventSignal
       const noArg = args.length === zero
       const withArg = args.length === one
 
@@ -95,9 +101,11 @@ export function createSignal(initialData, deps, transducer) {
       if (isDataSignal) {
         const [data] = args
 
+        const prevData = currData
+
         currData = /** @type {T} */ (data)
 
-        if (transducer) currData = /** @type {T} */ (transducer(currData))
+        if (transducer) currData = /** @type {T} */ (transducer(prevData, this))
       }
 
       notify()
