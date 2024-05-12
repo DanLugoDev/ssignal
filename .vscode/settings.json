@@ -1,4 +1,16 @@
 {
-  "cSpell.words": ["subber", "subbers", "unsub", "unsubber", "Unsubscriber"],
-  "editor.tabSize": 2
+  "cSpell.words": [
+    "Curr",
+    "endregion",
+    "ssignal",
+    "subber",
+    "subbers",
+    "unsub",
+    "unsubber",
+    "Unsubscriber"
+  ],
+  "editor.tabSize": 2,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "js/ts.implicitProjectConfig.target": "ESNext"
 }

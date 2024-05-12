@@ -1,8 +1,24 @@
 {
-  "name": "sane-signal",
-  "version": "2.0.0",
-  "main": "index.ts",
-  "repository": "git@github.com:DanLugoDev/sane-signal.git",
-  "author": "Daniel Lugo <gh@danlugo.dev>",
-  "license": "MIT"
+  "author": "Daniel Lugo",
+  "devDependencies": {
+    "@eslint/js": "^8.57.0",
+    "@types/eslint__js": "^8.42.3",
+    "@types/node": "^20.12.11",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "globals": "^15.2.0",
+    "typescript": "^5.4.5",
+    "typescript-eslint": "^7.8.0"
+  },
+  "engines": {
+    "node": "22.x.x"
+  },
+  "license": "MIT",
+  "main": "index.js",
+  "name": "ssignal",
+  "repository": "git@github.com:DanLugoDev/ssignal.git",
+  "scripts": {
+    "test": "tsc && npx eslint --no-warn-ignored *.* && node --test"
+  },
+  "version": "2.0.0"
 }
