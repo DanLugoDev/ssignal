@@ -47,6 +47,7 @@ export default [
       'max-statements': 'off',
       'multiline-comment-style': 'off',
       'no-console': 'off',
+      // 'no-extra-boolean-cast': 'off',
       'no-inline-comments': 'off',
       'no-plusplus': 'off',
       'no-undefined': 'off',
