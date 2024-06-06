@@ -136,3 +136,7 @@ void test('I can create a data signal that holds a value and transmits when it c
     }
   )
 })
+
+void test('I can create a signal containing instances of a class', async (t) => {
+  t.test('closurew')
+})
