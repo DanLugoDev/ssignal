@@ -286,13 +286,6 @@ export function createSignal(
   }
 
   if (deps) deps.forEach(dep => void dep.sub(onDepFire))
-
-  /**
-   * @return {void}
-   */
-  const ownUnsub = () => {
-    /** @type {Deps}*/ deps?.forEach(dep => void dep.unsub(onDepFire))
-  }
   // #endregion myOwnSubscriptions
 
   self = {
@@ -301,8 +294,6 @@ export function createSignal(
 
       if (transducer) currData = transducer(prevData, data)
       else currData = /** @type {T} */ (data) // T is Nullable
-
-      if (Object.is(currData, prevData)) return
 
       // if (!hasSignalInside) return
       // hasSignalInside = false
@@ -351,10 +342,6 @@ export function createSignal(
     },
     unsub(subber) {
       mySubbers.splice(mySubbers.indexOf(subber), 1)
-
-      // Don't unnecessarily sub this signal to dependents if no other
-      // signal is subbed to this one.
-      if (mySubbers.length === 0) ownUnsub()
     }
   }
 
