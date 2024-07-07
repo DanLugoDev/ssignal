@@ -3,6 +3,8 @@ import globals from 'globals'
 import pluginJs from '@eslint/js'
 import tseslint from 'typescript-eslint'
 
+// TODO: Enforce no braces in one statement functions
+
 export default [
   { languageOptions: { globals: { ...globals.browser, ...globals.node } } },
   pluginJs.configs.all,
@@ -42,8 +44,6 @@ export default [
           ignoreInferredTypes: true
         }
       ],
-      // Revisit later
-      '@typescript-eslint/strict-boolean-expressions': 'off',
       '@typescript-eslint/restrict-template-expressions': [
         'error',
         {
@@ -56,6 +56,8 @@ export default [
           allowRegExp: false
         }
       ],
+      // Revisit later
+      '@typescript-eslint/strict-boolean-expressions': 'off',
       'capitalized-comments': 'off',
       curly: ['error', 'multi'],
       'func-name-matching': 'off',

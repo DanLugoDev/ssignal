@@ -1,4 +1,4 @@
-export type Nullable<T> = T | never | null | undefined | void
+// export type Nullable<T> = T | never | null | undefined | void
 
 /**
  * @param signal The signal that emitted.
@@ -31,14 +31,14 @@ export interface Signal<T> {
    * // ...
    * ```
    */
-  emit(data?: Nullable<SignalData<T>>): void
+  emit(data?: T): void
   /**
    * Returns the current state of the data inside this signal, with inner
    * signals serialized away (each inner signal gets .getCurr() called on it,
    * which recursively calls it on its children). The value returned by this
    * method shall not be mutated.
    */
-  getCurr(): Readonly<SignalData<T>>
+  getCurr(): T
   /**
    * Subs a function to this signal, the function will be provided this signal
    * as its only argument. If this signal is fired but the transducer doesn't
@@ -49,38 +49,60 @@ export interface Signal<T> {
 }
 
 interface BasicTransducer<T, Deps extends readonly Signal<unknown>[]> {
-  (prevData: T, trigDepOrNxtSelf: Deps[number] | Nullable<SignalData<T>>): T
-}
-
-interface CatchingTransducer<T, Deps extends readonly Signal<unknown>[]>
-  extends BasicTransducer<T, Deps> {
   (
-    prevData: T,
-    trigDepOrNxtSelf: Deps[number] | Nullable<SignalData<T>>,
     /**
-     * Returns the same data as passed, but allows the transducer to catch any
-     * error that might result when writing into inner signals (those signals
-     * might have exceptions occur inside their transducers or deliberately throw
-     * as an API enforcement (discouraged as it incurs runtime overhead)).
+     * Previous data as it existed inside the signal until it just updated.
      */
-    emit: (data: T) => void
-  ): void
+    prevData: T,
+    /**
+     * If emit() was called on the signal, this parameter is the data provided
+     * to it. If a dependency triggered this update, then that dependency is
+     * provided.
+     */
+    trigDepOrNxt: Deps[number] | T | null | undefined
+  ): T
 }
 
-export type Transducer<T, Deps extends readonly Signal<unknown>[]> =
-  | BasicTransducer<T, Deps>
-  | CatchingTransducer<T, Deps>
+// interface EmitterTransducer<T, Deps extends readonly Signal<unknown>[]>
+//   extends BasicTransducer<T, Deps> {
+//   (
+//     /**
+//      * Previous data as it existed inside the signal until it just updated.
+//      */
+//     prevData: T,
+//     /**
+//      * If emit() was called on the signal, this parameter is the data provided
+//      * to it. If a dependency triggered this update, then that dependency is
+//      * provided.
+//      */
+//     trigDepOrNxt: Deps[number] | T | null,
+//     /**
+//      * Returns the same data as passed, can be used to trigger an update if the
+//      * signal is handling mutable data. Also allows the transducer to catch any
+//      * error that might result when writing into inner signals (those signals
+//      * might have exceptions occur inside their transducers or deliberately
+//      * throw as an API enforcement (discouraged as it incurs runtime overhead)).
+//      */
+//     emit: (data: T) => void
+//   ): void
+// }
 
-export type SignalData<T> = T extends Signal<infer U>
-  ? SignalData<U>
-  : T extends ReadonlyArray<infer U>
-  ? ReadonlyArray<SignalData<U>>
-  : T extends Array<infer UU>
-  ? Array<SignalData<UU>>
-  : T extends Function
-  ? T
-  : T extends { readonly [K in keyof T]: unknown }
-  ? { readonly [K in keyof T]: SignalData<T[K]> }
-  : T extends { [K in keyof T]: unknown }
-  ? { [K in keyof T]: SignalData<T[K]> }
-  : T
+export type Transducer<
+  T,
+  Deps extends readonly Signal<unknown>[]
+> = BasicTransducer<T, Deps>
+// | EmitterTransducer<T, Deps>
+
+// export type SignalData<T> = T extends Signal<infer U>
+//   ? SignalData<U>
+//   : T extends ReadonlyArray<infer U>
+//   ? ReadonlyArray<SignalData<U>>
+//   : T extends Array<infer UU>
+//   ? Array<SignalData<UU>>
+//   : T extends Function
+//   ? T
+//   : T extends { readonly [K in keyof T]: unknown }
+//   ? { readonly [K in keyof T]: SignalData<T[K]> }
+//   : T extends { [K in keyof T]: unknown }
+//   ? { [K in keyof T]: SignalData<T[K]> }
+//   : T

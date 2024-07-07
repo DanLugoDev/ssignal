@@ -8,14 +8,13 @@ import { mock, test } from 'node:test'
 import { createSignal } from './index.mjs'
 
 // #region mocks ///////////////////////////////////////////////////////////////
-/**
- * Returns a random number between min (inclusive) and max (exclusive)
- * @param {number} min
- * @param {number} max
- * @return {number}
- */
-const rndBetween = (min, max) => Math.random() * (max - min) + min
-console.log(rndBetween(0, 0))
+// /**
+//  * Returns a random number between min (inclusive) and max (exclusive)
+//  * @param {number} min
+//  * @param {number} max
+//  * @return {number}
+//  */
+// const rndBetween = (min, max) => Math.random() * (max - min) + min
 
 /**
  * @param {number} min
@@ -29,76 +28,70 @@ const rndIntBetween = (min, max) => {
 }
 // #endregion mocks ////////////////////////////////////////////////////////////
 
-void test('I can create an empty signal, for event signaling', async (t) => {
-  const evSignal = createSignal()
+void test(
+  'I can create a signal, without or without an empty value, ',
+  {
+    concurrency: false
+  },
+  async t => {
+    const evSignal = createSignal(
+      Math.random() > 0.5 ? undefined : Math.random()
+    )
 
-  await t.test(
-    'it has no value in it, and will throw if I try to access it',
-    () => {
-      assert.throws(() => {
-        evSignal.getCurr()
-      })
-    }
-  )
+    await t.test(
+      'I can sub to it, and it will transmit when it emits',
+      { concurrency: false },
+      () => {
+        const numOfCalls = rndIntBetween(10, 100)
+        const mockFn = mock.fn(s => {
+          assert(s === evSignal)
+        })
 
-  await t.test('I can then call emit() on it', () => {
-    evSignal.emit()
-  })
+        evSignal.sub(mockFn)
 
-  await t.test('but if I give it a value it will crash', () => {
-    assert.throws(() => {
-      const rndValues = [0, 1, -1, 'a', {}, []]
-      const rndVal = rndValues[rndIntBetween(0, 6)]
-      evSignal.emit(rndVal)
-    }, Error)
-  })
+        let i = 0
 
-  await t.test('I can sub to it, and it will transmit when it emits', () => {
-    const numOfCalls = rndIntBetween(10, 100)
-    const mockFn = mock.fn(() => {})
+        while (i++ < numOfCalls) evSignal.emit(Math.random())
 
-    const unsub = evSignal.sub(mockFn)
+        assert.strictEqual(mockFn.mock.callCount(), numOfCalls)
 
-    let i = 0
-    while (i++ < numOfCalls) evSignal.emit()
+        evSignal.unsub(mockFn)
+      }
+    )
 
-    assert.strictEqual(mockFn.mock.calls.length, numOfCalls)
+    await t.test(
+      'I can plug it as a dependency into another signal',
+      { concurrency: false },
+      async tt => {
+        const initialDerivedVal = Math.random()
+        const derivedSignal = createSignal(initialDerivedVal, [evSignal])
 
-    unsub()
-  })
+        await tt.test(
+          'and the derived signal will trigger when the original signal does',
+          () => {
+            const numOfCalls = rndIntBetween(10, 100)
+            const mockFn = mock.fn(s => void assert(s === derivedSignal))
 
-  await t.test(
-    'I can plug it as a dependency into another signal',
-    async (tt) => {
-      const initialDerivedVal = Math.random()
-      const derivedSignal = createSignal(initialDerivedVal, [evSignal])
+            derivedSignal.sub(mockFn)
 
-      await tt.test(
-        'and the derived signal will trigger when the event signal does',
-        () => {
-          const numOfCalls = rndIntBetween(10, 100)
-          const mockFn = mock.fn(() => {})
+            let i = 0
+            while (i++ < numOfCalls) evSignal.emit(Math.random())
 
-          derivedSignal.sub(mockFn)
+            assert.strictEqual(mockFn.mock.callCount(), numOfCalls)
+          }
+        )
 
-          let i = 0
-          while (i++ < numOfCalls) evSignal.emit()
+        await tt.test(
+          "also the derived signal shouldn't have changed it's value, because it wasn't provided a transducer",
+          () =>
+            void assert.strictEqual(derivedSignal.getCurr(), initialDerivedVal)
+        )
+      }
+    )
+  }
+)
 
-          assert.strictEqual(mockFn.mock.calls.length, numOfCalls)
-        }
-      )
-
-      await tt.test(
-        "also the derived signal shouldn't have changed it's value",
-        () => {
-          assert.strictEqual(derivedSignal.getCurr(), initialDerivedVal)
-        }
-      )
-    }
-  )
-})
-
-void test('I can create a data signal that holds a value and transmits when it changes', async (t) => {
+void test('I can create a data signal that holds a value and transmits when it changes', async t => {
   const users = createSignal({
     john: {
       id: 4320383123,
@@ -110,7 +103,7 @@ void test('I can create a data signal that holds a value and transmits when it c
     if (trigDep === users) {
       const newIDs = curr.slice()
 
-      newIDs.push(...Object.values(users.getCurr()).map((u) => u.id))
+      newIDs.push(...Object.values(users.getCurr()).map(u => u.id))
 
       return newIDs
     }
@@ -137,6 +130,6 @@ void test('I can create a data signal that holds a value and transmits when it c
   )
 })
 
-void test('I can create a signal containing instances of a class', async (t) => {
-  t.test('closurew')
-})
+// void test('I can create a signal containing instances of a class', async t => {
+//   t.test('closure', () => {})
+// })
