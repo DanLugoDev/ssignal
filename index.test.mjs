@@ -28,68 +28,55 @@ const rndIntBetween = (min, max) => {
 }
 // #endregion mocks ////////////////////////////////////////////////////////////
 
-void test(
-  'I can create a signal, without or without an empty value, ',
-  {
-    concurrency: false
-  },
-  async t => {
-    const evSignal = createSignal(
-      Math.random() > 0.5 ? undefined : Math.random()
-    )
+void test('I can create a signal, without or without an empty value, ', async t => {
+  const evSignal = createSignal(Math.random() > 0.5 ? undefined : Math.random())
 
-    await t.test(
-      'I can sub to it, and it will transmit when it emits',
-      { concurrency: false },
-      () => {
-        const numOfCalls = rndIntBetween(10, 100)
-        const mockFn = mock.fn(s => {
-          assert(s === evSignal)
-        })
+  await t.test('I can sub to it, and it will transmit when it emits', () => {
+    const numOfCalls = rndIntBetween(10, 100)
+    const mockFn = mock.fn(s => {
+      assert(s === evSignal)
+    })
 
-        evSignal.sub(mockFn)
+    evSignal.sub(mockFn)
 
-        let i = 0
+    let i = 0
 
-        while (i++ < numOfCalls) evSignal.emit(Math.random())
+    while (i++ < numOfCalls) evSignal.emit(Math.random())
 
-        assert.strictEqual(mockFn.mock.callCount(), numOfCalls)
+    assert.strictEqual(mockFn.mock.callCount(), numOfCalls)
 
-        evSignal.unsub(mockFn)
-      }
-    )
+    evSignal.unsub(mockFn)
+  })
 
-    await t.test(
-      'I can plug it as a dependency into another signal',
-      { concurrency: false },
-      async tt => {
-        const initialDerivedVal = Math.random()
-        const derivedSignal = createSignal(initialDerivedVal, [evSignal])
+  await t.test(
+    'I can plug it as a dependency into another signal',
+    async tt => {
+      const initialDerivedVal = Math.random()
+      const derivedSignal = createSignal(initialDerivedVal, [evSignal])
 
-        await tt.test(
-          'and the derived signal will trigger when the original signal does',
-          () => {
-            const numOfCalls = rndIntBetween(10, 100)
-            const mockFn = mock.fn(s => void assert(s === derivedSignal))
+      await tt.test(
+        'and the derived signal will trigger when the original signal does',
+        () => {
+          const numOfCalls = rndIntBetween(10, 100)
+          const mockFn = mock.fn(s => void assert(s === derivedSignal))
 
-            derivedSignal.sub(mockFn)
+          derivedSignal.sub(mockFn)
 
-            let i = 0
-            while (i++ < numOfCalls) evSignal.emit(Math.random())
+          let i = 0
+          while (i++ < numOfCalls) evSignal.emit(Math.random())
 
-            assert.strictEqual(mockFn.mock.callCount(), numOfCalls)
-          }
-        )
+          assert.strictEqual(mockFn.mock.callCount(), numOfCalls)
+        }
+      )
 
-        await tt.test(
-          "also the derived signal shouldn't have changed it's value, because it wasn't provided a transducer",
-          () =>
-            void assert.strictEqual(derivedSignal.getCurr(), initialDerivedVal)
-        )
-      }
-    )
-  }
-)
+      await tt.test(
+        "also the derived signal shouldn't have changed it's value, because it wasn't provided a transducer",
+        () =>
+          void assert.strictEqual(derivedSignal.getCurr(), initialDerivedVal)
+      )
+    }
+  )
+})
 
 void test('I can create a data signal that holds a value and transmits when it changes', async t => {
   const users = createSignal({
@@ -99,22 +86,20 @@ void test('I can create a data signal that holds a value and transmits when it c
     }
   })
 
-  const userIDs = createSignal([0], [users], (curr, trigDep) => {
-    if (trigDep === users) {
-      const newIDs = curr.slice()
-
-      newIDs.push(...Object.values(users.getCurr()).map(u => u.id))
-
-      return newIDs
-    }
-
-    // Unreachable, but to please Typescript
-    return curr
-  })
-
   await t.test(
     'it transmits to a new signal that has it as a dependency',
     (_, done) => {
+      const userIDs = createSignal([0], [users], (curr, trigDep) => {
+        if (trigDep === users) {
+          const newIDs = curr.slice()
+
+          newIDs.push(...Object.values(users.getCurr()).map(u => u.id))
+
+          return newIDs
+        }
+        return curr
+      })
+
       userIDs.sub(() => {
         assert(userIDs.getCurr().includes(4320383123))
         done()
