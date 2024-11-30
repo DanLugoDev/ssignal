@@ -31,7 +31,7 @@ export interface Signal<T> {
    * // ...
    * ```
    */
-  emit(data?: T): void
+  emit(data?: T | SetStateAction<T>): void
   /**
    * Returns the current state of the data inside this signal, with inner
    * signals serialized away (each inner signal gets .getCurr() called on it,

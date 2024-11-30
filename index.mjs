@@ -21,11 +21,6 @@
  * @typedef {() => void} VoidFn
  */
 
-/**
- * @template S
- * @typedef {S | ((prevState: S) => S)} SetStateAction
- */
-
 /** Unique path delimiter to avoid collisions */
 // export const del = '////$$__SSIGNAL__PATH__DELIMITER////'
 
